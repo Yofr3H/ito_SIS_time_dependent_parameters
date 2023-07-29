@@ -11,12 +11,11 @@ using Random, Distributions, LinearAlgebra
 using Dates 
 include("./Euler_Maruyama_SIS.jl") # only use SDE_SIS3
 
+#Cali_forward(mj,j,size_forecast,size_rolling_window)
 
-#Iran_forward(mj,j,size_forecast,size_rolling_window)
-
-function Iran_backward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
+function Cali_backward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
     # read historical data
-    r = CSV.read("rateIran_paper.csv", DataFrame) # forecast paper until 15 sept - change Fecha
+    r = CSV.read("rateCali1.csv", DataFrame) # forecast paper until 15 sept - change Fecha
     plotlyjs()
     p = Plots.plot(r.Fecha, r.I0,
         line=(2, :solid),

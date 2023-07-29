@@ -9,18 +9,28 @@ include("./iran_backward_case.jl")
 
 ################## Generating forward values Table 1
 
-mj = 9  # number of historical data to use: 8,9,10,29,30,31,60
-j = 178 # (178 - Agust 15, 2020)
+size_historical_data = 9  # number of historical data to use: 8,9,10,29,30,31,60
+I_k = 178 # (178 - date: Agust 15, 2020)
 size_forecast = 30 # size_forecast
 size_rolling_window = 0 
 
-forward_case = Iran_forward(mj,j,size_forecast,size_rolling_window)
+forward_case = Iran_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
 Plot_original_data = forward_case[3]
 RMSE_mean_estimated = forward_case[1] # approximation: 240.7
 
+#Table 1
+#size_historical_data   RMSE_mean_estimated 
+#8                      255.7446
+#9                      240.6787
+#10                     306.2132
+#29                     428.4117
+#30                     407.1304
+#31                     432.6823
+#60                     1528.5964
+
 ################## plot forecast and comparision MLP method
 
-Trajectores = forward_case[2]
+Trajectories = forward_case[2]
 Time = range(j, j + size_forecast - 1, size_forecast)
 extrem_trajectories = zeros(length(Time), 2)
 median_trajectories = zeros(length(Time))
@@ -65,21 +75,29 @@ p
 size_rolling_window = 30
 data_boxplot_forward_case = Iran_forward(mj,j,size_forecast,size_rolling_window)
 
-boxplot_forward = filter(!iszero, data_boxplot_forward_case[4]*N)
+data_boxplot_forward = filter(!iszero, data_boxplot_forward_case[4]*N)
 trace1 = box(
-    x=xs,
+    x=data_boxplot_forward,
     boxpoints="all",
     name="RMSE"
     )
-PlotlyJS.plot([boxplot_forward])
-boxplot_forward # conicides with boxplot Figure 8
+PlotlyJS.plot([trace1]) # conicides with boxplot Figure 8
 
 
 ################## Generating backward values Table 1
 
-mj = 14  # number of historical data to use: 8,14,15,16,30,60
-j = 178 # (178 - Agust 15, 2020)
+size_historical_data = 8  # number of historical data to use: 8,14,15,16,30,60
+I_k = 178 # (178 - Agust 15, 2020)
 size_forecast = 30 # size_forecast
 size_rolling_window = 0 
-backward_case = Iran_backward(mj,j,size_forecast,size_rolling_window)
+backward_case = Iran_backward(size_historical_data,I_k,size_forecast,size_rolling_window)
 RMSE_mean_estimated = backward_case[1] # approximation: 414.1 
+
+#Table 1 (continuation)
+#size_historical_data   RMSE_mean_estimated 
+#8                      414.1980
+#14                     419.7058
+#15                     374.3958
+#16                     370.6485
+#30                     396.5671
+#60                     1525.0232

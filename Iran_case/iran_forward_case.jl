@@ -11,11 +11,6 @@ using Random, Distributions, LinearAlgebra
 using Dates 
 include("./Euler_Maruyama_SIS.jl") # only use SDE_SIS3
 
-mj = 9  # number of historical data to use 
-j = 178 # (178 - Agust 15, 2020)
-size_forecast = 30 # size_forecast
-size_rolling_window =0 # 0: case no rolling window
-
 #Iran_forward(mj,j,size_forecast,size_rolling_window)
 
 function Iran_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
