@@ -16,6 +16,8 @@ include("./Euler_Maruyama_SIS.jl") # only use SDE_SIS3
 function Iran_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
     # read historical data
     r = CSV.read("rateIran_paper.csv", DataFrame) # forecast paper until 15 sept - change Fecha
+    #r= CSV.read("D:\\2021\\W_flor\\Euler_Maruyama\\SDE_SIS_13ene\\Iran_case\\rate_delhi.csv", DataFrame)
+    #r= CSV.read("D:\\2021\\W_flor\\Euler_Maruyama\\SDE_SIS_13ene\\Iran_case\\rate_delhi_adj.csv", DataFrame)
     plotlyjs()
     p = Plots.plot(r.Fecha, r.I0,
         line=(2, :solid),
@@ -25,9 +27,8 @@ function Iran_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_windo
     # scaling data
     N = r.N[1] # N population size
     I_scaled = N^(-1) * r.I0 #scaled data
-
     #################### define constants
-    gamma = 1 / 15
+    gamma = 1 / 14
     #################### time data subdivitions to use Euler Maruyama
     replications = 100000
     subdivitions = 50 # number of subdivitions into step values

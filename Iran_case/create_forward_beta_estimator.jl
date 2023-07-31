@@ -4,10 +4,11 @@ function create_beta_estimator(I_scaled::Any,gamma::Float64, mj::Int64, i::Int64
     # calculate sigma estimator at time i
     sum_numerator = 0.0
     sum_denominator = 0.0
-    for u in (i-mj+1):i
+    
+    for u in (mj):i
         sum_deltaI = 0.0
         m = 2
-        for k in (i-mj+1):u
+        for k in (mj):u
             sum_deltaI = sum_deltaI + (1 / m) * (I_scaled[k] - I_scaled[k-1])
             m = m + 1
         end

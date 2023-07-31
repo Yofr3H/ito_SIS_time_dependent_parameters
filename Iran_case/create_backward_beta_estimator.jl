@@ -5,10 +5,10 @@ function create_backward_beta_estimator(I_scaled::Any,gamma::Float64, mj::Int64,
     # calculate sigma estimator at time j
     sum_numerator = 0.0
     sum_denominator = 0.0
-    for u in i:(-1):(i-mj+1) # (i-mj+1):i
+    for u in i:(-1):(mj) # (i-mj+1):i
         sum_deltaI = 0.0
         m = 2
-        for k in (i-mj+1):u
+        for k in (mj):u
             sum_deltaI = sum_deltaI + (1 / m) * (I_scaled[k] - I_scaled[k-1])
             m = m + 1
         end

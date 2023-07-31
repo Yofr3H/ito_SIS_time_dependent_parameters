@@ -25,12 +25,12 @@ function SDE_SIS3(subdivitions::Int64, size_forecast::Int64, mj::Int64, j::Int64
     desvest = zeros(length(I_scaled))
     k = j - mj + 1 
     for i in k:j
-        desvest[i] = create_sigma_estimator(I_scaled[1:(i)], mj, i)
+        desvest[i] = create_sigma_estimator(I_scaled[1:(i)], k, i)
     end
 
     beta = zeros(length(I_scaled))
     for i in k:j
-        beta[i] = create_beta_estimator(I_scaled[1:i], gamma, mj, i)
+        beta[i] = create_beta_estimator(I_scaled[1:i], gamma, k, i)
     end
     S1 = zeros(T + 1, 2)#auxiliar intermediate steps: 1 (Suceptible) 2(Infected)
     #create_vectors of returns STEP 1
@@ -61,8 +61,8 @@ function SDE_SIS3(subdivitions::Int64, size_forecast::Int64, mj::Int64, j::Int64
     new_I_scaled[1:j] = I_scaled[1:j]
     new_I_scaled[j+1] = I[2]#obtain new estimators of sigma and beta
     #obtain new estimators of sigma and beta
-    desvest[j+1] = create_sigma_estimator(new_I_scaled[1:(j+1)], mj, (j + 1))
-    beta[j+1] = create_beta_estimator(new_I_scaled[1:(j+1)], gamma, mj, (j + 1))
+    desvest[j+1] = create_sigma_estimator(new_I_scaled[1:(j+1)], k, (j + 1))
+    beta[j+1] = create_beta_estimator(new_I_scaled[1:(j+1)], gamma, k, (j + 1))
 
     #updating to recalculate next iteration
     S1 = zeros(T + 1, 2)
@@ -87,8 +87,8 @@ function SDE_SIS3(subdivitions::Int64, size_forecast::Int64, mj::Int64, j::Int64
         
         new_I_scaled[j+(i-1)] = I[i]#obtain new estimators of sigma and beta
         #obtain new estimators of sigma and beta
-        desvest[j+(i-1)] = create_sigma_estimator(new_I_scaled[1:(j+(i-1))], mj, (j + (i-1) ))
-        beta[j+(i-1)] = create_beta_estimator(new_I_scaled[1:(j+(i-1))], gamma, mj, (j + (i-1)))
+        desvest[j+(i-1)] = create_sigma_estimator(new_I_scaled[1:(j+(i-1))], k, (j + (i-1) ))
+        beta[j+(i-1)] = create_beta_estimator(new_I_scaled[1:(j+(i-1))], gamma, k, (j + (i-1)))
      
         #updating values
         S1 = zeros(T + 1, 3)
@@ -107,13 +107,13 @@ function SDE_SIS5(subdivitions::Int64, size_forecast::Int64, mj::Int64, j::Int64
      desvest = zeros(length(I_scaled))
      k = j - mj + 1 #
      for i in k:j
-         desvest[i] = create_backward_sigma_estimator(I_scaled[1:(i)], mj, i)
+         desvest[i] = create_backward_sigma_estimator(I_scaled[1:(i)], k, i)
      end
  
      beta = zeros(length(I_scaled))
  
      for i in k:j
-         beta[i] = create_backward_beta_estimator(I_scaled[1:i], gamma, mj, i)
+         beta[i] = create_backward_beta_estimator(I_scaled[1:i], gamma, k, i)
      end
  
      S1 = zeros(T + 1, 2)#auxiliar intermediate steps: 1 (Suceptible) 2(Infected)
@@ -147,8 +147,8 @@ function SDE_SIS5(subdivitions::Int64, size_forecast::Int64, mj::Int64, j::Int64
      new_I_scaled[1:j] = I_scaled[1:j]
      new_I_scaled[j+1] = I[2]#obtain new estimators of sigma and beta
      #obtain new estimators of sigma and beta
-     desvest[j+1] = create_backward_sigma_estimator(new_I_scaled[1:(j+1)], mj, (j + 1))
-     beta[j+1] = create_backward_beta_estimator(new_I_scaled[1:(j+1)], gamma, mj, (j + 1))
+     desvest[j+1] = create_backward_sigma_estimator(new_I_scaled[1:(j+1)], k, (j + 1))
+     beta[j+1] = create_backward_beta_estimator(new_I_scaled[1:(j+1)], gamma, k, (j + 1))
  
      #updating to recalculate next iteration
      S1 = zeros(T + 1, 2)
@@ -174,8 +174,8 @@ function SDE_SIS5(subdivitions::Int64, size_forecast::Int64, mj::Int64, j::Int64
          
          new_I_scaled[j+i] = I[i]#obtain new estimators of sigma and beta
          #obtain new estimators of sigma and beta
-         desvest[j+(i-1)] = create_sigma_estimator(new_I_scaled[1:(j+(i-1))], mj, (j + (i-1) ))
-         beta[j+(i-1)] = create_beta_estimator(new_I_scaled[1:(j+(i-1))], gamma, mj, (j + (i-1)))
+         desvest[j+(i-1)] = create_sigma_estimator(new_I_scaled[1:(j+(i-1))], k, (j + (i-1) ))
+         beta[j+(i-1)] = create_beta_estimator(new_I_scaled[1:(j+(i-1))], gamma, k, (j + (i-1)))
  
          #updating values
          S1 = zeros(T + 1, 3)

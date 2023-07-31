@@ -9,28 +9,34 @@ include("./iran_backward_case.jl")
 
 ################## Generating forward values Table 1
 
-size_historical_data = 9  # number of historical data to use: 8,9,10,29,30,31,60
-I_k = 178 # (178 - date: Agust 15, 2020)
-size_forecast = 30 # size_forecast
+size_historical_data = 30 #7  # number of historical data to use: 8,9,10,29,30,31,60
+t_k = 178 # (t_k > size_historical_data + 1) 178 (178 - date: Agust 15, 2020)
+size_forecast = 30 #30 # size_forecast
 size_rolling_window = 0 
 
-forward_case = Iran_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
+forward_case = Iran_forward(size_historical_data,t_k,size_forecast,size_rolling_window)
 Plot_original_data = forward_case[3]
 RMSE_mean_estimated = forward_case[1] # approximation: 240.7
 
 #Table 1
 #size_historical_data   RMSE_mean_estimated 
-#8                      255.7446
-#9                      240.6787
-#10                     306.2132
-#29                     428.4117
-#30                     407.1304
+#6                                (1041.7964)
+#7                                (1158.5953)
+#8                      255.7446  (1231.74026)
+#9                      240.6787  (1012.0450)
+#10                     306.2132   (860.65037)
+#11                                (595.1842)
+#12                                (386.13356)
+#13                                (1152.7663)
+#29                     428.4117    (570.2873)
+#30                     407.1304    (713.4612)
 #31                     432.6823
 #60                     1528.5964
 
 ################## plot forecast and comparision MLP method
 
 Trajectories = forward_case[2]
+j = I_k
 Time = range(j, j + size_forecast - 1, size_forecast)
 extrem_trajectories = zeros(length(Time), 2)
 median_trajectories = zeros(length(Time))
@@ -72,13 +78,13 @@ p
 
 ################ Boxplot of RMSE median, using the rolling window
 
-size_rolling_window = 30
-data_boxplot_forward_case = Iran_forward(mj,j,size_forecast,size_rolling_window)
+size_rolling_window = 14 #30
+data_boxplot_forward_case = Iran_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
 
 data_boxplot_forward = filter(!iszero, data_boxplot_forward_case[4]*N)
 trace1 = box(
     x=data_boxplot_forward,
-    boxpoints="all",
+    boxpoints="suspectedoutliers",
     name="RMSE"
     )
 PlotlyJS.plot([trace1]) # conicides with boxplot Figure 8
