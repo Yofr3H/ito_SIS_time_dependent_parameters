@@ -9,14 +9,13 @@ using DataFrames
 using CSV
 using Random, Distributions, LinearAlgebra
 using Dates 
-include("./Euler_Maruyama_SIS.jl") 
+include("./Euler_Maruyama_SIS.jl") # only use SDE_SIS3
 
+#Delhi_adj_forward(mj,j,size_forecast,size_rolling_window)
 
-#Cali_forward(mj,j,size_forecast,size_rolling_window)
-
-function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
+function Delhi_adj_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
     # read historical data
-    r = CSV.read("rateCali1.csv", DataFrame) # forecast paper until 15 sept - change Fecha
+    r= CSV.read("D:\\2021\\W_flor\\Euler_Maruyama\\SDE_SIS_13ene\\Delhi_adjust_case\\rate_delhi_adj.csv", DataFrame)
     plotlyjs()
     p = Plots.plot(r.Fecha, r.I0,
         line=(2, :solid),
@@ -26,7 +25,6 @@ function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_windo
     # scaling data
     N = r.N[1] # N population size
     I_scaled = N^(-1) * r.I0 #scaled data
-
     #################### define constants
     gamma = 1 / 14
     #################### time data subdivitions to use Euler Maruyama
@@ -62,3 +60,44 @@ function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_windo
     return [index_mj*N,Trajectories,p,rsme_data]
 end
 
+
+
+# 13 Junio - base de datos de Irán
+# RSME: size_window=0 and j=178 (15 august) size_forecast=30
+# mj=15 index_mj= 301.63
+# mj=16 index_mj= 317.86 # best 
+# mj=14 index_mj= 350.93
+
+# RSME:  size_window=8 and j=170 (15 august) size_forecast=30
+# mj=15 index_mj= 341.88
+# mj=16 index_mj= 324.07
+# mj=14 index_mj= 336.58
+
+# RSME: size_window=15 and j=163 (15 august) size_forecast=30
+# mj=15 index_mj= 327.78
+# mj=16 index_mj= 316.02
+# mj=14 index_mj= 357.87
+
+
+# calculo del RSME de ago 15 a sept 14 Iran sis vs historical data
+
+# aux1_8 = 318.00
+# 13 Junio - base de datos de Irán
+# RSME: size_window=0 and j=178 (15 august) size_forecast=8
+# mj=15 index_mj= 247.22
+# 100000 replies mj=16 index_mj= 247.22 graph Fore8_15AugustForw
+# mj=17 index_mj= 283.39
+# mj=14 index_mj= 266.86
+
+# RSME: size_window=8 and j=170 (15 august) size_forecast=8
+# mj=15 index_mj= 271.25
+# mj=16 index_mj= 269.78
+# mj=14 index_mj= 270.90
+# mj=13 index_mj= 264.87
+# mj=12 index_mj= 241.67
+
+# RSME: size_window=15 and j=78 (15 august) size_forecast=8
+# mj=15 index_mj= 267.78
+# mj=16 index_mj= 264.36
+# mj=17 index_mj= 267.69
+# mj=14 index_mj= 280.45

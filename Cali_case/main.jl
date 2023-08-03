@@ -8,61 +8,65 @@ include("./cali_forward_case.jl")
 include("./cali_backward_case.jl")
 
 ################## Generating forward values - Table 2
-I_k = 563 # (563 - date: September 15, 2021 / 657 - date: December 18, 2021 )
-size_historical_data = 6  # number of historical data to use: 5,6,7
+t_k = 563 # (563 - date: September 15, 2021 / 657 - date: December 18, 2021 )
+size_historical_data = 7  # number of historical data to use: 5,6,7
 size_forecast = 8 # size_forecast: 8,15,30
 size_rolling_window =0 # 0: case no rolling window
 
-forward_case = Cali_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
-RMSE_mean_estimated = forward_case[1] # approximation: 12.9631 - Table 2
+forward_case = Cali_forward(size_historical_data,t_k,size_forecast,size_rolling_window)
+RMSE_mean_estimated = forward_case[1] # approximation: 12.1702 - Table 3
 ################### Table 2
-#size_forecast  size_historical_data  RMSE_mean_estimated 	% population
-#8		        5                     12.9644	              0.0005136
-#8		        6	                  10.5747	              0.0004189
-#8		        7	                  11.9399                 0.0004730
-#8		        8               	  12.0344                 0.0004768	
-#15		        9                     17.6087	              0.0006976
-#15		        10	                  14.3588                 0.0005689
-#15		        11	                  18.8530	              0.0007469
-#30		        19                    42.2818	              0.0016752
-#30		        20	                  32.9803                 0.0013067
-#30		        21	                  40.9528	              0.0016225
+#size_forecast  size_historical_data  RMSE_mean_estimated 	
+#8		        5                     27.2238	             
+#8		        6	                  23.2122	             
+#8		        7	                  12.1702                 
+#8		        8               	  25.5681              	
+#15		        9                    344.7666	             
+#15		        10	                  43.6809                
+#15		        11	                  13.5403	             
+#15             12                    23.6888	              
+#30		        20	                  97.7435               
+#30		        21	                  36.7797	              
+#30		        22	                  81.4679
 
 ################## Generating backward values Table 3
-I_k = 563 # (563 - date: September 15, 2021 )
-size_historical_data = 5  # number of historical data to use: 5,6,7
+t_k = 563 # (563 - date: September 15, 2021 )
+size_historical_data = 7  # number of historical data to use: 5,6,7
 size_forecast = 8 # size_forecast: 8,15,30
 size_rolling_window =0 # 0: case no rolling window
 
-backward_case = Cali_backward(size_historical_data,I_k,size_forecast,size_rolling_window)
+backward_case = Cali_backward(size_historical_data,t_k,size_forecast,size_rolling_window)
 RMSE_mean_estimated = backward_case[1] # approximation: 15.7911 
-#Table 3
-#size forecast 	size_historical_data   	RMSE_mean_estimated 	% population
-#8		        6	                    11.8185                 0.0004682
-#8		        5                       15.7911	                0.0006256
-#8		        7	                    13.1992                 0.0005229	
-#15		        10	                    17.6456                 0.0006991
-#15		        11	                    22.2810	                0.0008827
-#15		        9                       15.6998	                0.0006220
-#30		        20	                    35.1036                 0.0013908
-#30		        21	                    42.7376	                0.0016933
-#30		        19                      44.5962	                0.0017669
+#Table 4
+#size forecast 	size_historical_data   	RMSE_mean_estimated 	
+#8		        6	                    23.8016                
+#8		        7                       11.9798	               
+#8		        8	                    25.8656                
+#15		        10	                    42.0432                
+#15		        11	                    13.8436              
+#15		        12                      24.5291 	               
+#30		        20	                    97.7793                
+#30		        21	                    90.6071	               
+#30		        19                      95.4522	               
 
-I_k = 657 # (657 - date: December 18, 2021 )
-size_historical_data = 5  # number of historical data to use: 5,6,7
-size_forecast = 8 # size_forecast: 8,15,30
+t_k = 657 # (657 - date: December 18, 2021 )
+size_historical_data = 10  # number of historical data to use: 5,6,7
+size_forecast = 15 # size_forecast: 8,15,30
 size_rolling_window =0 # 0: case no rolling window
 
-forward_case = Cali_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
+backward_case = Cali_backward(size_historical_data,t_k,size_forecast,size_rolling_window)
+RMSE_mean_estimated = backward_case[1]
+forward_case = Cali_forward(size_historical_data,t_k,size_forecast,size_rolling_window)
 RMSE_mean_estimated = forward_case[1] # approximation: 12.9631 - Table 4
 #Table 4
-#size forecast	size_historical_data   	RMSE_mean_estimated 	% population
-#8		        5                       916.6769	            0.0363194
-#8		        6                       890.2948	            0.0352742
-#8		        7                       895.8889                0.0354958
-#30		        19                      2196.5654	            0.0870297	
-#30		        20                      2199.3651               0.0871406
-#30		        21                      2195.6696	            0.0869942
+#size forecast	size_historical_data   	RMSE mean forward 	    RMSE mean backward
+#8		        5                       861.5882	            873.7412 
+#8		        6                       787.7186	            796.1732
+#8		        7                       847.3904                853.0158
+#15             8                       3070.9562               3074.5225
+#15		        9                       1372.0081	            1367.6038
+#15		        10                      1432.8608	            1427.7673	
+
 
 
 Plot_original_data = forward_case[3] # Figure 9
@@ -70,12 +74,12 @@ Plot_original_data = forward_case[3] # Figure 9
 
 ################## plot forecast band
 
-I_k = 657 # (563 - date: September 15, 2021 / 657 - date: December 18, 2021 )
+t_k = 657 # (563 - date: September 15, 2021 / 657 - date: December 18, 2021 )
 size_historical_data = 6  # number of historical data to use: 5,6,7
 size_forecast = 8 # size_forecast: 8,15,30
 size_rolling_window =0 # 0: case no rolling window
 
-forward_case = Cali_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
+forward_case = Cali_forward(size_historical_data,t_k,size_forecast,size_rolling_window)
 
 
 Trajectories = forward_case[2]
@@ -113,31 +117,43 @@ p # To see the band, Zoom near of 657 - date: December 18, 2021
 ################ Boxplot of RMSE median, using the rolling window - Figure 10 
 
 size_rolling_window = 8 # case b) 15 and case c) 30
-data_boxplot_forward_case = Cali_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
+data_boxplot_forward_case = Cali_forward(size_historical_data,t_k,size_forecast,size_rolling_window)
 
 data_boxplot_forward = filter(!iszero, data_boxplot_forward_case[4]*N)
-boxplot_forward = box(
+boxplot_forward8 = box(
     x=data_boxplot_forward,
     boxpoints="all",
-    name="RMSE"
+    name="RMSE 8"
     )
-PlotlyJS.plot([boxplot_forward]) # coincides with boxplot case a), Figure 10
+    # run separately - preserve boxplot_forward# to plot
+#= boxplot_forward30 = box(
+    x=data_boxplot_forward,
+    boxpoints="all",
+    name="RMSE 30"
+    ) =#
+#= boxplot_forward15 = box(
+    x=data_boxplot_forward,
+    boxpoints="all",
+    name="RMSE 15"
+    ) =#
+
+b = PlotlyJS.plot([boxplot_forward8, boxplot_forward15,boxplot_forward30]) # coincides with boxplot case a), Figure 10
 
 
 ################## Generating Forward values - Table 4
 
-I_k = 657 # (657 - date: December 18, 2021 )
+t_k = 657 # (657 - date: December 18, 2021 )
 size_historical_data = 5  # number of historical data to use: 5,6,7
 size_forecast = 8 # size_forecast: 8,15,30
 size_rolling_window =0 # 0: case no rolling window
 
-forward_case = Cali_forward(size_historical_data,I_k,size_forecast,size_rolling_window)
+forward_case = Cali_forward(size_historical_data,t_k,size_forecast,size_rolling_window)
 RMSE_mean_estimated = forward_case[1] # approximation: 15.7911 
 #Table 4
-#size forecast 	size_historical_data   	RMSE_mean_estimated 	% population
-#8		        5                       916.6769	            0.0363194
-#8		        6                       890.2948	            0.0352742
-#8		        7                       895.8889                0.0354958
-#30		        19                      2196.5654	            0.0870297	
-#30		        20                      2199.3651               0.0871406
-#30		        21                      2195.6696	            0.0869942
+#size forecast 	size_historical_data   	RMSE_mean_estimated 	
+#8		        5                       916.6769	           
+#8		        6                       890.2948	            
+#8		        7                       895.8889                
+#30		        19                      2196.5654	            	
+#30		        20                      2199.3651              
+#30		        21                      2195.6696	            s

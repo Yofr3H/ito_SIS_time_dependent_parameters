@@ -1,6 +1,6 @@
 
 # -----------------------------
-# -     FORWARD
+# -     BACKWARD
 # -----------------------------
 
 using Plots
@@ -9,14 +9,14 @@ using DataFrames
 using CSV
 using Random, Distributions, LinearAlgebra
 using Dates 
-include("./Euler_Maruyama_SIS.jl") 
+include("./Euler_Maruyama_SIS.jl") # only use SDE_SIS3
 
 
-#Cali_forward(mj,j,size_forecast,size_rolling_window)
+#Delhi_adj_forward(mj,j,size_forecast,size_rolling_window)
 
-function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
+function Delhi_adj_backward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_window::Int64)
     # read historical data
-    r = CSV.read("rateCali1.csv", DataFrame) # forecast paper until 15 sept - change Fecha
+    r= CSV.read("D:\\2021\\W_flor\\Euler_Maruyama\\SDE_SIS_13ene\\Delhi_adjust_case\\rate_delhi_adj.csv", DataFrame)
     plotlyjs()
     p = Plots.plot(r.Fecha, r.I0,
         line=(2, :solid),
@@ -26,13 +26,12 @@ function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_windo
     # scaling data
     N = r.N[1] # N population size
     I_scaled = N^(-1) * r.I0 #scaled data
-
-    #################### define constants
+    # define constants
     gamma = 1 / 14
-    #################### time data subdivitions to use Euler Maruyama
+
+    # time data subdivitions to use Euler Maruyama
     replications = 100000
     subdivitions = 50 # number of subdivitions into step values
-
     mean_noise = 0.0 
     alp = 0.05 # percentil to cut outiliers
 
@@ -41,13 +40,13 @@ function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_windo
     initial_day_rolling_window = j - size_rolling_window
     rsme_data = zeros(length(I_scaled))
     for s in initial_day_rolling_window:(j)
-        M = SDE_SIS3(subdivitions, size_forecast, mj, s, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SIS5(subdivitions, size_forecast, mj, s, mean_noise, gamma, alp, I_scaled)
         Trajectories[1, :] = M[:, 2] # 1(suceptibles) 2(Infected)
         for i = 2:(replications-1)
-            M = SDE_SIS3(subdivitions,  size_forecast, mj, s, mean_noise, gamma, alp, I_scaled)
+            M = SDE_SIS5(subdivitions,  size_forecast, mj, s, mean_noise, gamma, alp, I_scaled)
             Trajectories[i, :] = M[:, 2]
         end
-        M = SDE_SIS3(subdivitions, size_forecast, mj, s, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SIS5(subdivitions, size_forecast, mj, s, mean_noise, gamma, alp, I_scaled)
         Trajectories[replications, :] = M[:, 2]
         Time = range(s, s + size_forecast - 1, size_forecast)
         mean_trajectories = zeros(length(Time))
@@ -59,6 +58,5 @@ function Cali_forward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_windo
     end
     index_mj = mean(filter(!iszero, rsme_data))
     index_mj*N
-    return [index_mj*N,Trajectories,p,rsme_data]
+    return [index_mj*N,Trajectories,p,rsme_data]  
 end
-

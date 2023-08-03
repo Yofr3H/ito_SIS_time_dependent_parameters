@@ -27,7 +27,7 @@ function Iran_backward(mj::Int64,j::Int64,size_forecast::Int64,size_rolling_wind
     N = r.N[1] # N population size
     I_scaled = N^(-1) * r.I0 #scaled data
     # define constants
-    gamma = 1 / 15
+    gamma = 1 / 14
 
     # time data subdivitions to use Euler Maruyama
     replications = 100000
