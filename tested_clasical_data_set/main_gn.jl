@@ -44,7 +44,7 @@ model = model = gn_get_forecast(mj,j,size_forecast,size_day,replications,subdivi
 
 Trajectories = model[1]
 mean_trajectories = model[2]
-RMSE_mean_estimated = model[3]
+RMSE_mean_estimated = model[3] # 0.00010845061509590775
 
 
 ################## plot forecast and comparision MLP method j-10, j= 178
@@ -92,9 +92,21 @@ g1 = Plots.plot(g1,r.Year[j:(j+size_forecast-1)], extrem_trajectories[:, 1]*N,
 g1
 Plots.savefig("g1.png")# pronostico con datos entre 1990 y 2000 para obtener 10 años de pronostico
 img213 = load("g1.png")
-save("g1.jpg",img213)
+save("g1_milstein.jpg",img213)
 
 #testing beta behaviour
 
-scaled_beta = beta.^(-1) * 365.25^(-1)
-g2 = Plots.plot(r.Year[2:80],scaled_beta[2:80]) 
+#scaled_beta = beta.^(-1) * 365.25^(-1)
+#g2 = Plots.plot(r.Year[2:80],scaled_beta[2:80]) 
+
+function MAPE(y_true::Vector{Float64}, y_pred::Vector{Float64})
+    if length(y_true) != length(y_pred)
+        error("Vectors must have the same length")
+    end
+    return 100 * mean(abs.((y_true .- y_pred) ./ y_true))
+end
+
+N = mean(r.Nt)  #r.N[1] # N population size
+I_scaled = convert(Array{Float64},r.I_1) * N^(-1) 
+
+MAPE(mean_trajectories, I_scaled[j:j+size_forecast-1]) # 4.6969499646668575

@@ -60,6 +60,7 @@ function Iran_get_forecast_j(mj::Int64,j::Int64,size_forecast::Int64,size_day::I
         #s = j#testing
         M = SDE_SIS1(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, I_scaled)
         
+        
         Trajectories[1, :] = M[:, 2] # 1(suceptibles) 2(Infected)
         for i = 2:(replications-1)
             M = SDE_SIS1(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, I_scaled)

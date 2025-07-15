@@ -60,14 +60,17 @@ function Iran_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int
     rsme_data = zeros(length(I_scaled))
     #for s in initial_day_rolling_window:(j)
         #s = j#testing
-        M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
-        
+        #M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+
         Trajectories[1, :] = M[:, 2] # 1(suceptibles) 2(Infected)
         for i = 2:(replications-1)
-            M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+            #M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+            M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
             Trajectories[i, :] = M[:, 2]
         end
-        M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        #M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
         Trajectories[replications, :] = M[:, 2]
 
         Time = range(j, j + size_forecast - 1, size_forecast)

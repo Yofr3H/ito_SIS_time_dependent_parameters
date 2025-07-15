@@ -23,8 +23,8 @@ delta_beta = beta_u - beta_l
 
 ################## TimeSubdivitions
 Time_extrem = 200
-divitions = 300
-subdivitions = 50
+divitions = 600
+subdivitions = 200
 replications = 10000 #replications
 
 Time = range(0.00, Time_extrem, divitions)
@@ -50,13 +50,15 @@ save("sigma_figure_consistency.jpg",img13)
 #################### strong consistency for beta and sigma #####################
 gamma = 0.7 
 mean1 = 0.0
+
 I_0 = 0.3 # suppose that 30% of population are infected
 
 
 beta_trajectorie = zeros(replications, length(Time))
 sigma_trajectorie = zeros(replications, length(Time))
 for i = 2:(replications-1)
-    M = SDE_SIS(Time_extrem, divitions, subdivitions, mean1, sigma, gamma, beta, I_0)
+    #M = SDE_SIS(Time_extrem, divitions, subdivitions, mean1, sigma, gamma, beta, I_0)
+    M = SDE_SIS_Milstein(Time_extrem, divitions, subdivitions, mean1, sigma, gamma, beta, I_0)
     beta_trajectorie[i, :] = M[:,3]
     sigma_trajectorie[i, :] = M[:,4]
 end
@@ -75,12 +77,12 @@ plotlyjs()
 beta_estimator_figure = Plots.plot(Time, mean_MLE_beta_estimator, color="red", label="MLE_beta")
 Plots.savefig("beta_estimator_figure.png")
 img1313 = load("beta_estimator_figure.png")
-save("beta_estimator_figure.jpg",img1313)
+save("beta_estimator_figure_milstein.jpg",img1313)
 plotlyjs()
-beta_estimator = Plots.plot(Time, mean_sigma_estimator, color="blue", label="hat(sigma)")
+sigma_estimator = Plots.plot(Time, mean_sigma_estimator, color="blue", label="hat(sigma)")
 Plots.savefig("sigma_estimator_figure.png")
 img313 = load("sigma_estimator_figure.png")
-save("sigma_estimator_figure.jpg",img313)
+save("sigma_estimator_figure_milstein.jpg",img313)
 
 
 function MAPE(y_true::Vector{Float64}, y_pred::Vector{Float64})
@@ -90,7 +92,7 @@ function MAPE(y_true::Vector{Float64}, y_pred::Vector{Float64})
     return 100 * mean(abs.((y_true .- y_pred) ./ y_true))
 end
 
-Percentual_error_beta = MAPE(beta[1:50:end],mean_MLE_beta_estimator)
+Percentual_error_beta = MAPE(beta[4000:200:end],mean_MLE_beta_estimator[20:end])
 
-Percentual_error_sigma = MAPE(sigma[1:50:end],mean_sigma_estimator)
+Percentual_error_sigma = MAPE(sigma[1:200:end],mean_sigma_estimator)
 

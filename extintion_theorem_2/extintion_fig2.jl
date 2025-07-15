@@ -75,16 +75,19 @@ Time = range(0.001, Time_extrem, subdivitions)
 h = 1 / subdivitions
 
 Trajectorie = zeros(replications, subdivitions)
-M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+#M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
 I = M[:, 2]
 Trajectorie[1, :] = I
 for i = 2:(replications-1)
-    M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+    #M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+    M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
     S = M[:, 1]
     I = M[:, 2]
     Trajectorie[i, :] = I#I
 end
-M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+#M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
 S = M[:, 1]
 I = M[:, 2]
 Trajectorie[replications, :] = I#I
@@ -117,19 +120,22 @@ Time = range(0.001, Time_extrem, subdivitions)
 h = 1 / subdivitions
 
 Trajectorie = zeros(replications, subdivitions)
-M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+#M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
 I = M[:, 2]
 I = log.(I)./Time#prove extintion theorem
 Trajectorie[1, :] = I
 for i = 2:(replications-1)
-    M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+    #M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+    M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
     S = M[:, 1]
     I = M[:, 2]
     I = log.(I)./Time #prove extintion theorem
     Trajectorie[i, :] = I
 
 end
-M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+#M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
 S = M[:, 1]
 I = M[:, 2];
 I = log.(I) ./ Time#prove extintion theorem
@@ -142,9 +148,9 @@ for i = 1:(length(Time))
     extrem_trajectorie[i, 1] = minimum(dat)
     extrem_trajectorie[i, 2] = maximum(dat)
 end
-extintion_log_figure = Plots.plot(Time, extrem_trajectorie[:, 1],
-    fillrange=extrem_trajectorie[:, 2], fillalpha=0.15, c=1,
-    label="Simulation log(I_t)/t band", legend=:topright)
+extintion_log_figure = Plots.plot(Time[2:end], extrem_trajectorie[2:end, 1],
+    fillrange=extrem_trajectorie[2:end, 2], fillalpha=0.15, c=1,
+    label="Simulation log(I_t)/t band", legend=:bottomright)
 
 Plots.savefig("extintion_log_fig2.png")
 img4 = load("extintion_log_fig2.png")

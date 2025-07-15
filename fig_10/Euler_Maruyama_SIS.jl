@@ -274,4 +274,125 @@ function SDE_SISg(subdivitions::Int64, size_forecast::Int64,size_day::Int64, mj:
     return [S I ]
 end
 
+function SDE_SISg_Milstein(
+    subdivitions::Int64, size_forecast::Int64, size_day::Int64,
+    mj::Int64, j::Int64, mean_noise::Float64, gamma::Float64, 
+    alp::Float64, I_scaled::Vector{Float64}; ϵ::Float64 = 1e-8
+)
+    T = subdivitions
+    Time_size = size_forecast
+    k = mj + 1
+    h_data = (j - mj)^(-1)
+    h = 1.0 / T
 
+    desvest = zeros(length(I_scaled))
+    beta = zeros(length(I_scaled))
+    for i in k:j
+        desvest[i] = create_sigma_estimator(I_scaled, h_data, mj, i; ϵ=ϵ)
+        beta[i] = create_beta_estimator(I_scaled, h_data, gamma, mj, i)
+    end
+
+    S1 = zeros(T + 1, 2)  # 1: Susceptible, 2: Infected
+    S = zeros(Time_size)
+    I = zeros(Time_size)
+    I0 = I_scaled[j]
+    S1[1, 2] = I0
+    S1[1, 1] = 1.0 - I0
+    S[1] = S1[1, 1]
+    I[1] = S1[1, 2]
+
+    for s in 2:(T + 1)
+        r = rand(Uniform(alp, 1 - alp))
+        sigma_sim = quantile(desvest[k:j], r)
+        beta_sim = quantile(beta[k:j], r)
+        z = rand(Normal(mean_noise, 1.0))
+        I_prev = S1[s - 1, 2]
+
+        drift = (beta_sim * (1 - I_prev) * I_prev - gamma * I_prev)
+        diffusion = sigma_sim * (1 - I_prev) * I_prev * z
+        milstein_term = 0.5 * sigma_sim^2 * (1 - I_prev) * I_prev * (1 - 2 * I_prev) * (z^2 - 1)
+
+        S1[s, 2] = I_prev + drift * h + diffusion * sqrt(h) + milstein_term * h
+        S1[s, 1] = 1.0 - S1[s, 2]
+    end
+
+    I[2] = S1[size_day + 1, 2]
+    S[2] = 1.0 - I[2]
+
+    new_I_scaled = copy(I_scaled)
+    new_I_scaled[j + 1] = I[2]
+    desvest[j + 1] = create_sigma_estimator(new_I_scaled[1:j + 1], h_data, mj, j + 1; ϵ=ϵ)
+    beta[j + 1] = create_beta_estimator(new_I_scaled[1:j + 1], h_data, gamma, mj, j + 1)
+
+    for i in 3:Time_size
+        S1[1, 1] = S[i - 1]
+        S1[1, 2] = I[i - 1]
+        for w in 2:(T + 1)
+            r = rand(Uniform(alp, 1 - alp))
+            idx_end = j + (i - 2)
+            sigma_sim = quantile(desvest[k:idx_end], r)
+            beta_sim = quantile(beta[k:idx_end], r)
+            z = rand(Normal(mean_noise, 1.0))
+            I_prev = S1[w - 1, 2]
+
+            drift = (beta_sim * (1 - I_prev) * I_prev - gamma * I_prev)
+            diffusion = sigma_sim * (1 - I_prev) * I_prev * z
+            milstein_term = 0.5 * sigma_sim^2 * (1 - I_prev) * I_prev * (1 - 2 * I_prev) * (z^2 - 1)
+
+            S1[w, 2] = I_prev + drift * h + diffusion * sqrt(h) + milstein_term * h
+            S1[w, 1] = 1.0 - S1[w, 2]
+        end
+
+        I[i] = S1[size_day + 1, 2]
+        S[i] = 1.0 - I[i]
+        new_I_scaled[j + i - 1] = I[i]
+        desvest[j + i - 1] = create_sigma_estimator(new_I_scaled[1:(j + i - 1)], h_data, k, j + i - 1; ϵ=ϵ)
+        beta[j + i - 1] = create_beta_estimator(new_I_scaled[1:(j + i - 1)], h_data, gamma, k, j + i - 1)
+    end
+
+    return [S I]
+end
+
+
+function SDE_SIS_Milstein(T::Int64, Time::Int64, h::Float64, mean::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
+    # Milstein scheme for SIS model with time-dependent parameters
+
+    S1 = zeros(T + 1, 2) # auxiliary array for intermediate steps
+    S = zeros(Time)      # Susceptible values
+    I = zeros(Time)      # Infected values
+
+    # Initialization
+    S1[1, 2] = I0[1]               # Initial infected
+    S1[1, 1] = 1.0 - I0[1]         # Initial susceptible
+
+    for i in 1:Time
+        for j in 2:(T + 1)
+            z = rand(Normal(mean, 1))
+            I_prev = S1[j-1, 2]
+            S_prev = 1.0 - I_prev
+            b = desvest[i]
+            g = b * S_prev * I_prev
+            dg = b * (1.0 - 2.0 * I_prev)
+
+            ΔW = sqrt(h) * z
+            correction = 0.5 * b^2 * S_prev * I_prev * (1.0 - 2.0 * I_prev) * (ΔW^2 - h)
+            drift = (beta[i] * S_prev * I_prev - gamma * I_prev) * h
+
+            I_next = I_prev + drift + g * ΔW + correction
+            S1[j, 2] = I_next
+            S1[j, 1] = 1.0 - I_next
+        end
+
+        # Save the final state of each interval
+        S[i] = S1[T + 1, 1]
+        I[i] = S1[T + 1, 2]
+
+        # Re-initialize for next day
+        if i < Time
+            S1 = zeros(T + 1, 2)
+            S1[1, 1] = S[i]
+            S1[1, 2] = I[i]
+        end
+    end
+    return [S I]
+end

@@ -28,7 +28,7 @@ include("./rmse.jl")
  ## testing
  #RSME(I_scaled[j+1:j + size_forecast],M[:,2])
 
-function gn_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int64,replications::Int64,subdivitions::Int64,alp::Float64,mean_noise::Float64,gamma::Float64)
+function gn_get_forecast_1(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int64,replications::Int64,subdivitions::Int64,alp::Float64,mean_noise::Float64,gamma::Float64)
     # read historical data
     r = CSV.read("dat_gn.csv", DataFrame) # forecast paper until 15 sept - change Fecha
     ####################
@@ -70,6 +70,32 @@ function gn_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int64
     # retun index_mj*N,Trajectories,p,rsme_data
     return [Trajectories,mean_trajectories,RMSE_error]
 end
+
+function gn_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int64,replications::Int64,subdivitions::Int64,alp::Float64,mean_noise::Float64,gamma::Float64)
+    r = CSV.read("dat_gn.csv", DataFrame)
+    N = mean(r.Nt)
+    I_scaled = convert(Array{Float64},r.I_1) / N
+    
+    Trajectories = zeros(replications, size_forecast)
+    
+    for i in 1:replications
+        #M = SDE_SISg(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        Trajectories[i, :] = M[:, 2]
+    end
+
+    Time = j:(j + size_forecast - 1)
+    mean_trajectories = zeros(length(Time))
+    
+    for i = 1:length(Time)
+        dat = Trajectories[:, i]
+        mean_trajectories[i] = median(dat)
+    end
+    
+    RMSE_error = RSME(mean_trajectories, I_scaled[j:j+size_forecast-1])
+    return [Trajectories, mean_trajectories, RMSE_error]
+end
+
 
 
 

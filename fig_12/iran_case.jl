@@ -45,12 +45,12 @@ function Iran_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int
     
     plotlyjs()
     # xticks=(r.Fecha, Dates.format.(r.Fecha, "yyyy-mm-dd"))
-    p = Plots.plot(r.Fecha, Float_I,
-        line=(2, :solid),
-        label="Number infected per day", color="red",
-        size=(675, 200), titleposition=:left,
-        legend=:topright,
-        xticks=(r.Fecha, Dates.format.(r.Fecha, "yyyy-mm-dd")))
+    # p = Plots.plot(r.Fecha, Float_I,
+    #     line=(2, :solid),
+    #     label="Number infected per day", color="red",
+    #     size=(675, 200), titleposition=:left,
+    #     legend=:topright,
+    #     xticks=(r.Fecha, Dates.format.(r.Fecha, "yyyy-mm-dd")))
     # scaling data
     N = r.N[1] # N population size
     I_scaled = N^(-1) * Float_I #scaled data
@@ -60,14 +60,17 @@ function Iran_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int
     rsme_data = zeros(length(I_scaled))
     #for s in initial_day_rolling_window:(j)
         #s = j#testing
-        M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
-        
+        #M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+
         Trajectories[1, :] = M[:, 2] # 1(suceptibles) 2(Infected)
         for i = 2:(replications-1)
-            M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+            #M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+            M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
             Trajectories[i, :] = M[:, 2]
         end
-        M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        #M = SDE_SIS3(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
+        M = SDE_SISg_Milstein(subdivitions, size_forecast, size_day, mj, j, mean_noise, gamma, alp, I_scaled)
         Trajectories[replications, :] = M[:, 2]
 
         Time = range(j, j + size_forecast - 1, size_forecast)
@@ -79,51 +82,70 @@ function Iran_get_forecast(mj::Int64,j::Int64,size_forecast::Int64,size_day::Int
             mean_trajectories[i, 1] = median(dat)#0.5
         end
         RMSE_error = RSME(mean_trajectories*N, I_scaled[j:j+size_forecast-1]*N)
+        MAPE_error = MAPE(mean_trajectories*N, I_scaled[j:j+size_forecast-1]*N)
     #end
     #index_mj = mean(filter(!iszero, rsme_data))
     #index_mj*N
     # retun index_mj*N,Trajectories,p,rsme_data
-    return [Trajectories,mean_trajectories,RMSE_error,p]
+    #return [Trajectories,mean_trajectories,RMSE_error,p]
+    return [Trajectories,mean_trajectories,RMSE_error,MAPE_error]
 end
 
 
 
-# 13 Junio - base de datos de Irán
-# RSME: size_window=0 and j=178 (15 august) size_forecast=30
-# mj=15 index_mj= 301.63
-# mj=16 index_mj= 317.86 # best 
-# mj=14 index_mj= 350.93
 
-# RSME:  size_window=8 and j=170 (15 august) size_forecast=30
-# mj=15 index_mj= 341.88
-# mj=16 index_mj= 324.07
-# mj=14 index_mj= 336.58
+mj= 10 # testing
+j = 167 # testing
+gamma = 1 / 14
+#################### time data subdivitions to use Milstein
+replications = 1000 #testing
+subdivitions = 1000 # 50 # number of subdivitions into step values
+mean_noise = 0.0 # testing
+alp = 0.05 # percentil to cut outiliers
 
-# RSME: size_window=15 and j=163 (15 august) size_forecast=30
-# mj=15 index_mj= 327.78
-# mj=16 index_mj= 316.02
-# mj=14 index_mj= 357.87
+size_day = 5 # testing
+
+size_forecast = 7 # testing
+value = Iran_get_forecast(mj,j,size_forecast,size_day,replications,subdivitions,alp,mean_noise,gamma)
+RMSE_ = value[3]
+MAPE_ = value[4]
+
+#= # 13 Junio - bd de Irán
+gamma = 1 / 14
+#################### to use Milstein
+replications = 1000 #testing
+subdivitions = 1000 # 50 # number of subdivitions into step values
+mean_noise = 0.0 # testing
+alp = 0.05 
+
+# size_window=0 and j=167 (15 august) 
 
 
-# calculo del RSME de ago 15 a sept 14 Iran sis vs historical data
+mj= 20 # t_1 (26 june)
+j = 167 # t_k
 
-# aux1_8 = 318.00
-# 13 Junio - base de datos de Irán
-# RSME: size_window=0 and j=178 (15 august) size_forecast=8
-# mj=15 index_mj= 247.22
-# 100000 replies mj=16 index_mj= 247.22 graph Fore8_15AugustForw
-# mj=17 index_mj= 283.39
-# mj=14 index_mj= 266.86
+size_day = 2 # i
+size_forecast = 30 # s           15                      7
+rmse = 221.2565314          136.3518614       91.5785425
+mape =  30.6153385           22.0175480       11.2804112
 
-# RSME: size_window=8 and j=170 (15 august) size_forecast=8
-# mj=15 index_mj= 271.25
-# mj=16 index_mj= 269.78
-# mj=14 index_mj= 270.90
-# mj=13 index_mj= 264.87
-# mj=12 index_mj= 241.67
 
-# RSME: size_window=15 and j=78 (15 august) size_forecast=8
-# mj=15 index_mj= 267.78
-# mj=16 index_mj= 264.36
-# mj=17 index_mj= 267.69
-# mj=14 index_mj= 280.45
+size_day = 5 # i
+size_forecast = 30 # s           15                      7
+rmse = 993.8184063          330.2122122       88.4630761
+mape =  55.09202921          35.7771850       14.2843811
+
+
+mj= 10 # t_1 (26 june)
+j = 167 # t_k
+
+size_day = 2 # i
+size_forecast = 30 # s           15                      7
+rmse = 630.7865911          250.7954819             81.6164874
+mape =  48.3077226           31.3288817             12.4288280
+
+
+size_day = 5 # i
+size_forecast = 30 # s           15                      7
+rmse = 5701.2467739         979.4970367            195.4644137
+mape =   72.1585489          51.3658160             22.4323210 =#

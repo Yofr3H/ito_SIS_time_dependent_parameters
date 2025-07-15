@@ -3,18 +3,21 @@ using Plots
 using PlotlyJS
 using DataFrames
 using Dates
+using FileIO
+using ImageMagick
 
 include("./iran_case.jl")
 include("./iran_case2.jl")
+include("./band_IC.jl")
 
 #------------------
 # Initial parameters
 #------------------
 
-size_forecast = 15 # testing 15,30 
+size_forecast = 30 # testing 30 
 size_day = 2 # testing
-mj= 168# testing 168
-j = 178 # testing
+mj= 148# testing 168
+j = 178 # testing 178 coincides with talking study
 gamma = 1 / 14
 #################### time data subdivitions to use Euler Maruyama
 replications = 10000 #testing
@@ -30,7 +33,7 @@ model = Iran_get_forecast(mj,j,size_forecast,size_day,replications,subdivitions,
 Trajectories = model[1]
 mean_trajectories = model[2]
 RMSE_mean_estimated = model[3]
-Plot_original_data = model[4]
+#Plot_original_data = model[4]
 
 ################## plot forecast and comparision MLP method j-10, j= 178
 
@@ -68,10 +71,16 @@ p = Plots.plot(r.Fecha[(mj-10):end], r.I0[(mj-10):end],
     tickdirection=:out)
      #xticks=(range(r.Fecha[mj],r.Fecha[end],8), "yy-mm-dd"))
      d = CSV.read("dat_paper.csv", DataFrame)
+     upper_fore, lower_fore = IC(d.fore)
 p = Plots.plot!(p,r.Fecha[178:208],d.fore,
     line=(2, :solid),
     label="MLP forecast", color="green",
     size=(675, 440), titleposition=:left) #case iran only
+
+
+p = Plots.plot!(p,r.Fecha[178:208],upper_fore,
+    fillrange=lower_fore, fillalpha=0.25,
+    label="Band CI95%", color="green") 
 
 p = Plots.plot!(p,r.Fecha[j:(j+size_forecast-1)],median_trajectories[:, 1]*N,
     line=(2, :solid),
@@ -86,7 +95,9 @@ p = Plots.plot(p,r.Fecha[j:(j+size_forecast-1)], extrem_trajectories[:, 1]*N,
     fillrange=extrem_trajectories[:, 2]*N, fillalpha=0.15, c=1,
     label="forecast Itô-SIS band")
 p
-Plots.savefig("p.svg")
+Plots.savefig("forecast_c_iran.png") # fig 6
+img13 = load("forecast_c_iran.png")
+save("cforecast_c_iran_Milstein.jpg",img13)
 
 ############################################################################
 ############################################################################
@@ -94,7 +105,7 @@ Plots.savefig("p.svg")
 ################## Rolling historical data to one forecast 
 
 #size_forecast = 7 # testing
-size_day = 2 # testing
+size_day = 8 # testing
 start_forecast = 11 # testing
 size_rolling_historical_window = 10
 gamma = 1 / 14
@@ -166,13 +177,19 @@ g = Plots.plot(r.Fecha, Float_I,
 d = CSV.read("dat_paper.csv", DataFrame)
 #aux2 = RSME(d.fore[1:(size_forecast+1)],I_scaled[(length(I_scaled) - size_forecast ):(end)]*N) # 407.60
 
-g = Plots.plot!(g,r.Fecha[178:208],d.fore,
+g = Plots.plot!(g,r.Fecha[178:207],d.fore[1:(end-1)],
     line=(2, :solid),
     label="MLP forecast", color="green",
     size=(1495, 640), titleposition=:left) #case iran only
+
+     upper_fore, lower_fore = IC(d.fore)
+g = Plots.plot!(g,r.Fecha[178:208],upper_fore,
+    fillrange=lower_fore, fillalpha=0.25,
+    label="Band CI95%", color="green") 
+
 #################################
 
-g = Plots.plot!(g,r.Fecha[(start_forecast + 1):end],mean_forecast*N,
+g = Plots.plot!(g,r.Fecha[(start_forecast):(end-1)],mean_forecast*N,
     line=(2, :solid),
     label="Mean forecast Itô-SIS ", color="blue",
     size=(1495, 640), titleposition=:left)
@@ -181,13 +198,15 @@ g = Plots.plot!(g,r.Fecha[(start_forecast + 1):end],mean_forecast*N,
     #label="Mean forecast Itô-SIS", color="orange",
     #size=(675, 200), titleposition=:left,
     #legend=:bottomright)
-g = Plots.plot(g,r.Fecha[(start_forecast+1):end], extrem_forecast[:, 1]*N,
+g = Plots.plot(g,r.Fecha[(start_forecast):(end - 1)], extrem_forecast[:, 1]*N,
     fillrange=extrem_forecast[:, 2]*N, fillalpha=0.15, c=1,
     label="Forecast Itô-SIS band  ")
 g
-Plots.savefig("g_rolling.svg")
- g2=g   
-Plots.savefig("g2.png") # fig 6
+#Plots.savefig("g_rolling.svg")
+# g2=g   
+Plots.savefig("g2_milstein.png") # fig 6
+img26 = load("g2_milstein.png")
+save("Iran_rolling_Milstein_1.jpg",img26)
 
 
 

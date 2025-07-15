@@ -2,9 +2,10 @@
 #  S_n,I_n
 #  T is the steps number.
 
-using Random, Distributions
+using Random, Distributions, Statistics
 include("./create_forward_beta_estimator.jl")
 include("./create_forward_sigma_estimator.jl")
+
 
 function SDE_SIS(T_extrem::Int64, divitions::Int64, Num_subdivitions::Int64, mean1::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
     #SIS(T,Time,h,mean,desvest,gamma,beta,I0)
@@ -122,3 +123,59 @@ function SDE_SIS(T_extrem::Int64, divitions::Int64, Num_subdivitions::Int64, mea
     MLE_beta[Time] = MLE_beta[Time] * (T_extrem)^(-1)  
     return [S I MLE_beta Sigma ]
 end
+
+
+
+
+function SDE_SIS_Milstein(T_extrem::Int64, divitions::Int64, Num_subdivitions::Int64, mean1::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
+    Time_interval = range(0.00, T_extrem, length=divitions * Num_subdivitions)
+    T = Num_subdivitions
+    h = Time_interval[2] - Time_interval[1]
+    Time = divitions
+
+    S1 = zeros(T + 1, 2)
+    S = zeros(Time)
+    I = zeros(Time)
+    MLE_beta = zeros(Time)
+    Sigma = zeros(Time)
+
+    S1[1, 2] = I0
+    S1[1, 1] = 1.0 - I0
+    S[1] = S1[1, 1]
+    I[1] = S1[1, 2]
+
+    for i in 1:Time
+        sum_MLE_beta = 0.0
+        sum_numerator_sigma = 0.0
+        sum_denominator_sigma = 0.0
+        for j in 2:(T + 1)
+            idx = (i - 1) * T + j - 1
+            z = rand(Normal(mean1, 1))
+            Itm1 = S1[j-1, 2]
+            noise_term = desvest[idx] * sqrt(h) * z
+            correction_term = 0.5 * desvest[idx]^2 * h * (1 - 2 * Itm1)
+            drift = (beta[idx] * h + noise_term + correction_term) * (1 - Itm1) * Itm1
+            S1[j, 2] = Itm1 + drift - gamma * Itm1 * h
+            S1[j, 1] = 1.0 - S1[j, 2]
+
+            if Itm1 > 0 && Itm1 < 1
+                sum_MLE_beta += (S1[j, 2] - Itm1) / (Itm1 * (1 - Itm1)) + gamma * h / (1 - Itm1)
+                sum_numerator_sigma += (S1[j, 2] - Itm1)^2
+                sum_denominator_sigma += (Itm1 * (1 - Itm1))^2 * h
+            end
+        end
+        S[i] = S1[T + 1, 1]
+        I[i] = S1[T + 1, 2]
+        MLE_beta[i] = sum_MLE_beta / (T * h)
+        Sigma[i] = sqrt(sum_numerator_sigma / sum_denominator_sigma)
+
+        S1 .= 0.0
+        S1[1, 1] = S[i]
+        S1[1, 2] = I[i]
+    end
+
+    return hcat(S, I, MLE_beta, Sigma)
+end
+
+
+

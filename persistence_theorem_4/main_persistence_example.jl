@@ -54,7 +54,7 @@ h = 1 / subdivitions
 
 ################# Number deterministic basic reproduction R^D - example Theorem 4
 #R_D = (beta_l + beta_u)  # 1.375
-R_S = R_D - 0.5 * (sigma_u^2 / gamma) #
+#R_S = R_D - 0.5 * (sigma_u^2 / gamma) #
 #mean beta
 mean_beta = 0.5* (beta_l + beta_u)
 m_R_D = mean_beta / gamma
@@ -66,18 +66,21 @@ psi_lu = (1 / sigma_l^2) * (sqrt(beta_u^2 - 2 * sigma_l^2 * gamma) - (beta_u - s
 
 
 Trajectorie = zeros(replications, subdivitions)
-M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+#M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
 I = M[:, 2]
 
 Trajectorie[1, :] = I
 for i = 2:(replications-1)
-    M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+    #M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+    M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
     S = M[:, 1]
     I = M[:, 2]
     Trajectorie[i, :] = I
 
 end
-M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+#M = SDE_SIS(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
+M = SDE_SIS_Milstein(Time_extrem, subdivitions, h, mean1, sigma, gamma, beta, I_0)
 S = M[:, 1]
 I = M[:, 2];
 Trajectorie[replications, :] = I#I
@@ -98,6 +101,6 @@ plot!(graf1, Time, psi_lu * ones(length(Time)), color="black", label="psi_u")#
 persistence = plot!(graf1, Time, lim_It * ones(length(Time)), color="red", label="lim It")#
 Plots.savefig("sim_persistence_th4.png")
 img = load("sim_persistence_th4.png")
-save("sim_persistence_th4.jpg",img)
+save("sim_persistence_th4_milstein.jpg",img)
 
 

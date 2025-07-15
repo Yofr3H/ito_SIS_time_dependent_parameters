@@ -7,7 +7,7 @@ using FileIO
 using ImageMagick
 
 include("./iran_case.jl")
-include("./iran_case2.jl")
+#include("./iran_case2.jl")
 
 
 
@@ -16,10 +16,10 @@ include("./iran_case2.jl")
 
 ################## Rolling historical data to one forecast 
 
-#size_forecast = 7 # testing
-size_day = 2 # testing
-start_forecast = 11 # testing
-size_rolling_historical_window = 10
+
+size_day = 5 # testing
+start_forecast = 160 # testing 31: 2020-04-01 cali
+size_rolling_historical_window = 30
 gamma = 1 / 14
 #################### time data subdivitions to use Euler Maruyama
 replications = 1000 #testing
@@ -29,7 +29,7 @@ alp = 0.05
 
 ################# Preparing data
 #r = CSV.read("rateIran_paper.csv", DataFrame) #           
-r = CSV.read("rateCali.csv", DataFrame) # forecast paper until 15 sept - change Fecha
+#r = CSV.read("rateCali.csv", DataFrame) # forecast paper until 15 sept - change Fecha
  
 N = r.N[1] # N population size
 I_scaled = N^(-1) * r.I0 #scaled infected data
@@ -51,8 +51,7 @@ for j in 1:(end_forecast -1)
             extrem_forecast[j, 2] = maximum(dat)
         
 end
-
-r = CSV.read("rateCali.csv", DataFrame) # forecast paper until 15 sept - change Fecha
+# forecast paper until 15 sept - change Fecha
  
 #################### eliminate null Infected values
 Float_I = Float64.(r.I0) 
@@ -60,45 +59,44 @@ Float_I = Float64.(r.I0)
 # scaling data
 
 plotlyjs()
-# xticks=(r.Fecha, Dates.format.(r.Fecha, "yyyy-mm-dd"))
-g = Plots.plot(r.Fecha, Float_I,
+
+
+#plot rolling between specific dates
+date_first = Date("2020-08-05")  # example cali: 2020-05-31 
+date_end = Date("2020-09-05") # example cali: 2020-07-15
+
+idx_first = findfirst(==(date_first), r.Fecha)
+idx_end = findfirst(==(date_end), r.Fecha)
+
+g = Plots.plot(r.Fecha[idx_first:idx_end], Float_I[idx_first:idx_end],
     line=(2, :solid),
     label="Daily infected", color="red",
     size=(1495, 640), titleposition=:left,
     legend=:outerbottomleft,
-    xticks=(r.Fecha[1:15:end], 
-            Dates.format.(r.Fecha[1:15:end], "yyyy-mm-dd")),
-    xrotation = 90,
+    xticks=(r.Fecha[idx_first:5:idx_end], 
+            Dates.format.(r.Fecha[idx_first:5:idx_end], "yyyy-mm-dd")),
+    xrotation=90,
     xtickfont=(8),
     widen=false,
     tickdirection=:out)
 
+range_forecast = start_forecast:(start_forecast + size(mean_forecast, 1) - 1)
+forecast_dates = r.Fecha[range_forecast]
+forecast_mask = (forecast_dates .>= date_first) .& (forecast_dates .<= date_end)
+valid_indices = findall(forecast_mask)
 
-
-g = Plots.plot!(g,r.Fecha[(start_forecast + 1):end],mean_forecast*N,
+g = Plots.plot!(g, forecast_dates[valid_indices], mean_forecast[valid_indices] * N,
     line=(2, :solid),
-    label="Mean forecast Itô-SIS ", color="blue",
+    label="Mean forecast Itô-SIS", color="blue",
     size=(1495, 640), titleposition=:left)
-    #p = Plots.plot!(p,r.Fecha[j:(j+size_forecast-1)],mean_trajectories[:, 1]*N,
-    #line=(2, :solid),
-    #label="Mean forecast Itô-SIS", color="orange",
-    #size=(675, 200), titleposition=:left,
-    #legend=:bottomright)
-g = Plots.plot(g,r.Fecha[(start_forecast+1):end], extrem_forecast[:, 1]*N,
-    fillrange=extrem_forecast[:, 2]*N, fillalpha=0.15, c=1,
-    label="Forecast Itô-SIS band  ")
+
+g = Plots.plot!(g, forecast_dates[valid_indices],
+    extrem_forecast[valid_indices, 1] * N,
+    fillrange=extrem_forecast[valid_indices, 2] * N,
+    fillalpha=0.15, c=1,
+    label="Forecast Itô-SIS band")
 g  
 Plots.savefig("c_rolling.png") # fig 6
 img26 = load("c_rolling.png")
-save("c_rolling.jpg",img26)
-
-
-
-
-
-
-
-
-
-
+save("c_rolling_Milstein_1.jpg",img26)
 

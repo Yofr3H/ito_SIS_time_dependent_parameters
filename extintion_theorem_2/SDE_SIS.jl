@@ -64,3 +64,46 @@ function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean::Float64, desvest::Any,
         end
     return [S I]
 end
+
+function SDE_SIS_Milstein(T::Int64, Time::Int64, h::Float64, mean::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
+    # Milstein scheme for SIS model with time-dependent parameters
+
+    S1 = zeros(T + 1, 2) # auxiliary array for intermediate steps
+    S = zeros(Time)      # Susceptible values
+    I = zeros(Time)      # Infected values
+
+    # Initialization
+    S1[1, 2] = I0[1]               # Initial infected
+    S1[1, 1] = 1.0 - I0[1]         # Initial susceptible
+
+    for i in 1:Time
+        for j in 2:(T + 1)
+            z = rand(Normal(mean, 1))
+            I_prev = S1[j-1, 2]
+            S_prev = 1.0 - I_prev
+            b = desvest[i]
+            g = b * S_prev * I_prev
+            dg = b * (1.0 - 2.0 * I_prev)
+
+            ΔW = sqrt(h) * z
+            correction = 0.5 * b^2 * S_prev * I_prev * (1.0 - 2.0 * I_prev) * (ΔW^2 - h)
+            drift = (beta[i] * S_prev * I_prev - gamma * I_prev) * h
+
+            I_next = I_prev + drift + g * ΔW + correction
+            S1[j, 2] = I_next
+            S1[j, 1] = 1.0 - I_next
+        end
+
+        # Save the final state of each interval
+        S[i] = S1[T + 1, 1]
+        I[i] = S1[T + 1, 2]
+
+        # Re-initialize for next day
+        if i < Time
+            S1 = zeros(T + 1, 2)
+            S1[1, 1] = S[i]
+            S1[1, 2] = I[i]
+        end
+    end
+    return [S I]
+end

@@ -4,12 +4,11 @@
 
 using Random, Distributions
 
-function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean1::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
+function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
     #SIS(T,Time,h,mean,desvest,gamma,beta,I0)
 
     #initial disease rate
-    bt = beta[1]
-    desv = desvest[1]
+    
     S1 = zeros(T + 1, 2)#auxiliar intermediate steps
     #create_vectors of returns
     S = zeros(Time)
@@ -20,9 +19,9 @@ function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean1::Float64, desvest::Any
     S1[1, 1] = 1.0 - I0[1] #S_0
     # SDE SIS FIRST EVOLUTION
     for j in 2:(T+1)
-        z = rand(Normal(mean1, 1))
+        z = rand(Normal(mean, 1))
         #evaluate Infected next  step j - rate infection with additive noise evaluating with step j-1 data
-        S1[j, 2] = S1[j-1, 2] + (bt * h + desv * z * sqrt(h)) * (1.0 - S1[j-1, 2]) * S1[j-1, 2]  - gamma * S1[j-1, 2] * h#Infected
+        S1[j, 2] = S1[j-1, 2] + (beta[1] * h  + desvest[1] * sqrt(h) * z) * (1.0 - S1[j-1, 2]) * S1[j-1, 2] - gamma * S1[j-1, 2] * h#Infected
         S1[j, 1] = 1.0 - S1[j, 2]
     end
     #saving the first values -  final subdivision
@@ -30,7 +29,7 @@ function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean1::Float64, desvest::Any
     I[1] = S1[1, 2]
 
         for j in 2:(T+1)
-            z = rand(Normal(mean1, 1))
+            z = rand(Normal(mean, 1))
             #evaluate Infected next  step - rate infection with additive noise
             S1[j, 2] = S1[j-1, 2] + (beta[2] * h  + desvest[2] * sqrt(h) * z) * (1.0 - S1[j-1, 2]) * S1[j-1, 2] - gamma * S1[j-1, 2] * h#Infected
             S1[j, 1] = 1.0 - S1[j, 2]
@@ -45,14 +44,11 @@ function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean1::Float64, desvest::Any
 		S1[1,2] = I[2]
 		
 
-        bt = beta[2]
-        dev = desvest[2] #fijo - cambiar
-
         for i in 3: Time
 			for j in 2: (T + 1)
-				z=rand(Normal(mean1,desv))
+				z=rand(Normal(mean,1))
 				#evaluate Infected next  step - rate infection with additive noise
-				S1[j,2]= S1[j-1,2]+ (bt + z)*(1.0 - S1[j-1,2])*S1[j-1,2]*h - gamma*S1[j-1,2]*h;#Infected
+				S1[j,2]= S1[j-1,2]+ (beta[i] * h  + desvest[i] * sqrt(h) * z)*(1.0 - S1[j-1,2])*S1[j-1,2] - gamma*S1[j-1,2]*h;#Infected
 				#evaluate Infected next  step - rate infection with proportional noise
 				#S1[i+1,2]= S1[i,2] + bt*(1.0 + z)*(1.0 - S1[i,2])*S1[i,2]*h - gamma*S1[i,2]*h;#Infected
 				S1[j,1]= 1.0 - S1[j,2]
@@ -65,8 +61,49 @@ function SDE_SIS(T::Int64, Time::Int64, h::Float64, mean1::Float64, desvest::Any
 			S1 = zeros(T + 1,3)
 			S1[1,1] = S[i]
 			S1[1,2] = I[i]
-		    bt = beta[i]
-            desvest[i]
         end
+    return [S I]
+end
+
+function SDE_SIS_Milstein(T::Int64, Time::Int64, h::Float64, mean::Float64, desvest::Any, gamma::Float64, beta::Any, I0::Float64)
+    # Milstein scheme for SIS model with time-dependent parameters
+
+    S1 = zeros(T + 1, 2) # auxiliary array for intermediate steps
+    S = zeros(Time)      # Susceptible values
+    I = zeros(Time)      # Infected values
+
+    # Initialization
+    S1[1, 2] = I0[1]               # Initial infected
+    S1[1, 1] = 1.0 - I0[1]         # Initial susceptible
+
+    for i in 1:Time
+        for j in 2:(T + 1)
+            z = rand(Normal(mean, 1))
+            I_prev = S1[j-1, 2]
+            S_prev = 1.0 - I_prev
+            b = desvest[i]
+            g = b * S_prev * I_prev
+            dg = b * (1.0 - 2.0 * I_prev)
+
+            ΔW = sqrt(h) * z
+            correction = 0.5 * b^2 * S_prev * I_prev * (1.0 - 2.0 * I_prev) * (ΔW^2 - h)
+            drift = (beta[i] * S_prev * I_prev - gamma * I_prev) * h
+
+            I_next = I_prev + drift + g * ΔW + correction
+            S1[j, 2] = I_next
+            S1[j, 1] = 1.0 - I_next
+        end
+
+        # Save the final state of each interval
+        S[i] = S1[T + 1, 1]
+        I[i] = S1[T + 1, 2]
+
+        # Re-initialize for next day
+        if i < Time
+            S1 = zeros(T + 1, 2)
+            S1[1, 1] = S[i]
+            S1[1, 2] = I[i]
+        end
+    end
     return [S I]
 end
